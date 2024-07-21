@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Participios en Español</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #pregunta {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        #respuesta {
+            font-size: 1em;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        #enviar {
+            font-size: 1em;
+            padding: 5px 10px;
+        }
+        #resultado {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Juego de Participios en Español</h1>
+    <p>Escribe el participio correcto para cada verbo.</p>
+    <div id="pregunta"></div>
+    <input type="text" id="respuesta" placeholder="Escribe el participio aquí">
+    <button id="enviar">Enviar</button>
+    <div id="resultado"></div>
+
+    <script>
+        const verbos = {
+            'volver': 'vuelto',
+            'ver': 'visto',
+            'escribir': 'escrito',
+            'hacer': 'hecho',
+            'suponer': 'supuesto',
+            'abrir': 'abierto',
+            'poner': 'puesto',
+            'decir': 'dicho'
+        };
+
+        let verbosList = Object.entries(verbos);
+        let currentIndex = 0;
+        let puntaje = 0;
+
+        function siguientePregunta() {
+            if (currentIndex < verbosList.length) {
+                document.getElementById('pregunta').textContent = `¿Cuál es el participio de '${verbosList[currentIndex][0]}'?`;
+                document.getElementById('respuesta').value = '';
+                document.getElementById('resultado').textContent = '';
+            } else {
+                finalizarJuego();
+            }
+        }
+
+        function verificarRespuesta() {
+            const respuesta = document.getElementById('respuesta').value.toLowerCase();
+            const participioCorrecto = verbosList[currentIndex][1];
+
+            if (respuesta === participioCorrecto) {
+                document.getElementById('resultado').textContent = '¡Correcto!';
+                puntaje++;
+            } else {
+                document.getElementById('resultado').textContent = `Incorrecto. El participio correcto es '${participioCorrecto}'.`;
+            }
+
+            currentIndex++;
+            setTimeout(siguientePregunta, 1500);
+        }
+
+        function finalizarJuego() {
+            const porcentaje = (puntaje / verbosList.length) * 100;
+            document.getElementById('pregunta').textContent = 'Juego terminado';
+            document.getElementById('resultado').textContent = `Tu puntaje es: ${puntaje}/${verbosList.length}\nHas acertado el ${porcentaje.toFixed(2)}% de las preguntas.`;
+            document.getElementById('respuesta').style.display = 'none';
+            document.getElementById('enviar').style.display = 'none';
+        }
+
+        document.getElementById('enviar').addEventListener('click', verificarRespuesta);
+        document.getElementById('respuesta').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verificarRespuesta();
+            }
+        });
+
+        // Mezclar el orden de los verbos
+        verbosList = verbosList.sort(() => Math.random() - 0.5);
+        siguientePregunta();
+    </script>
+</body>
+</html>

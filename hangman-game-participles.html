@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Ahorcado: Participios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        #sentence-display {
+            font-size: 20px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .infinitive {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        #participle-display {
+            font-size: 24px;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+        }
+        #hangman-svg {
+            width: 200px;
+            height: 250px;
+            margin-bottom: 20px;
+        }
+        #guess-input {
+            font-size: 18px;
+            width: 30px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        button {
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #congratulations, #failure-notice {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        #congratulations {
+            color: #4CAF50;
+        }
+        #failure-notice {
+            color: #F44336;
+        }
+        #grade {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        #guessed-letters {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Juego del Ahorcado: Participios</h1>
+        <div id="sentence-display"></div>
+        <div id="participle-display"></div>
+        <svg id="hangman-svg" viewBox="0 0 200 250">
+            <!-- SVG content remains the same as in the previous version -->
+            <!-- Gallows -->
+            <line x1="20" y1="230" x2="100" y2="230" stroke="brown" stroke-width="4"/>
+            <line x1="60" y1="20" x2="60" y2="230" stroke="brown" stroke-width="4"/>
+            <line x1="60" y1="20" x2="140" y2="20" stroke="brown" stroke-width="4"/>
+            <line x1="140" y1="20" x2="140" y2="50" stroke="brown" stroke-width="4"/>
+            
+            <!-- Head -->
+            <circle id="head" cx="140" cy="70" r="20" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            <!-- Eyes -->
+            <circle id="left-eye" cx="133" cy="65" r="3" fill="#FFA500" opacity="0"/>
+            <circle id="right-eye" cx="147" cy="65" r="3" fill="#FFA500" opacity="0"/>
+            <!-- Nose -->
+            <line id="nose" x1="140" y1="70" x2="140" y2="75" stroke="#FFA500" stroke-width="2" opacity="0"/>
+            <!-- Mouth -->
+            <path id="mouth" d="M130 80 Q140 85 150 80" fill="none" stroke="#FFA500" stroke-width="2" opacity="0"/>
+            
+            <!-- Body -->
+            <line id="body" x1="140" y1="90" x2="140" y2="150" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            
+            <!-- Arms -->
+            <path id="left-arm" d="M140 100 Q120 120 110 100" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            <path id="right-arm" d="M140 100 Q160 120 170 100" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            
+            <!-- Hands -->
+            <circle id="left-hand" cx="110" cy="100" r="5" fill="#FFA500" opacity="0"/>
+            <circle id="right-hand" cx="170" cy="100" r="5" fill="#FFA500" opacity="0"/>
+            
+            <!-- Legs -->
+            <path id="left-leg" d="M140 150 Q120 180 115 210" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            <path id="right-leg" d="M140 150 Q160 180 165 210" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            
+            <!-- Feet -->
+            <path id="left-foot" d="M115 210 Q110 215 115 220" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+            <path id="right-foot" d="M165 210 Q170 215 165 220" fill="none" stroke="#FFA500" stroke-width="4" opacity="0"/>
+        </svg>
+        <input type="text" id="guess-input" maxlength="1">
+        <button onclick="makeGuess()">Adivinar</button>
+        <div id="message"></div>
+        <div id="guessed-letters"></div>
+        <div id="congratulations"></div>
+        <div id="failure-notice"></div>
+        <div id="grade"></div>
+        <button onclick="newGame()" style="margin-top: 20px;">Nueva Palabra</button>
+    </div>
+
+    <script>
+        const sentences = {
+            'volver': 'El estudiante ha [PARTICIPLE] (<span class="infinitive">volver</span>) a casa después de un largo día.',
+            'ver': 'Nunca he [PARTICIPLE] (<span class="infinitive">ver</span>) una aurora boreal en persona.',
+            'escribir': 'El autor ha [PARTICIPLE] (<span class="infinitive">escribir</span>) diez novelas en su carrera.',
+            'hacer': 'Los niños han [PARTICIPLE] (<span class="infinitive">hacer</span>) un castillo de arena en la playa.',
+            'suponer': 'El detective ha [PARTICIPLE] (<span class="infinitive">suponer</span>) que el crimen ocurrió por la noche.',
+            'poner': 'La madre ha [PARTICIPLE] (<span class="infinitive">poner</span>) la mesa para la cena familiar.',
+            'decir': 'El testigo ha [PARTICIPLE] (<span class="infinitive">decir</span>) la verdad en el juicio.',
+            'romper': 'El jugador se ha [PARTICIPLE] (<span class="infinitive">romper</span>) la pierna durante el partido.',
+            'morir': 'Lamentablemente, la planta ha [PARTICIPLE] (<span class="infinitive">morir</span>) por falta de agua.',
+            'descubrir': 'Los científicos han [PARTICIPLE] (<span class="infinitive">descubrir</span>) un nuevo planeta en otra galaxia.'
+        };
+
+        const participles = {
+            'volver': 'vuelto',
+            'ver': 'visto',
+            'escribir': 'escrito',
+            'hacer': 'hecho',
+            'suponer': 'supuesto',
+            'poner': 'puesto',
+            'decir': 'dicho',
+            'romper': 'roto',
+            'morir': 'muerto',
+            'descubrir': 'descubierto'
+        };
+
+        let currentVerb = '';
+        let currentParticiple = '';
+        let guessedLetters = [];
+        let remainingGuesses = 6;
+        let totalGuesses = 0;
+
+        const hangmanParts = [
+            'head', 'left-eye', 'right-eye', 'nose', 'mouth', 'body', 
+            'left-arm', 'right-arm', 'left-hand', 'right-hand', 
+            'left-leg', 'right-leg', 'left-foot', 'right-foot'
+        ];
+
+        function newGame() {
+            const verbs = Object.keys(sentences);
+            currentVerb = verbs[Math.floor(Math.random() * verbs.length)];
+            currentParticiple = participles[currentVerb];
+            guessedLetters = [];
+            remainingGuesses = 6;
+            totalGuesses = 0;
+            updateDisplay();
+            resetHangman();
+            document.getElementById('congratulations').textContent = '';
+            document.getElementById('failure-notice').textContent = '';
+            document.getElementById('grade').textContent = '';
+            document.getElementById('guess-input').value = '';
+            document.getElementById('guessed-letters').textContent = '';
+        }
+
+        function updateDisplay() {
+            const sentenceDisplay = document.getElementById('sentence-display');
+            sentenceDisplay.innerHTML = sentences[currentVerb];
+            
+            const participleDisplay = document.getElementById('participle-display');
+            participleDisplay.textContent = currentParticiple
+                .split('')
+                .map(letter => guessedLetters.includes(letter) ? letter : '_')
+                .join(' ');
+            
+            document.getElementById('message').textContent = '';
+        }
+
+        function resetHangman() {
+            hangmanParts.forEach(part => {
+                document.getElementById(part).setAttribute('opacity', '0');
+            });
+        }
+
+        function updateHangman() {
+            const partsToShow = Math.min(14 - remainingGuesses * 2, hangmanParts.length);
+            for (let i = 0; i < partsToShow; i++) {
+                document.getElementById(hangmanParts[i]).setAttribute('opacity', '1');
+            }
+        }
+
+        function makeGuess() {
+            const guessInput = document.getElementById('guess-input');
+            const guess = guessInput.value.toLowerCase();
+
+            if (guess.length !== 1 || !/[a-z]/.test(guess)) {
+                document.getElementById('message').textContent = 'Por favor, ingresa una letra válida.';
+                return;
+            }
+
+            if (guessedLetters.includes(guess)) {
+                document.getElementById('message').textContent = 'Ya has adivinado esa letra.';
+                return;
+            }
+
+            guessedLetters.push(guess);
+            totalGuesses++;
+
+            if (!currentParticiple.includes(guess)) {
+                remainingGuesses--;
+                updateHangman();
+            }
+
+            updateDisplay();
+            updateGuessedLetters();
+
+            if (remainingGuesses === 0) {
+                endGame(false);
+            } else if (currentParticiple.split('').every(letter => guessedLetters.includes(letter))) {
+                endGame(true);
+            }
+
+            guessInput.value = '';
+        }
+
+        function updateGuessedLetters() {
+            const guessedLettersDisplay = document.getElementById('guessed-letters');
+            guessedLettersDisplay.textContent = `Letras adivinadas: ${guessedLetters.join(', ')}`;
+        }
+
+        function endGame(isWin) {
+            if (isWin) {
+                const congratsMessage = '¡Felicidades! Has adivinado el participio correctamente.';
+                document.getElementById('congratulations').textContent = congratsMessage;
+                const grade = calculateGrade();
+                document.getElementById('grade').textContent = `Tu calificación: ${grade}`;
+            } else {
+                document.getElementById('failure-notice').textContent = '¡Has fallado! Inténtalo de nuevo.';
+                document.getElementById('message').textContent = `El participio correcto era "${currentParticiple}".`;
+            }
+            
+            document.getElementById('sentence-display').innerHTML = sentences[currentVerb].replace('[PARTICIPLE]', `<strong>${currentParticiple}</strong>`);
+        }
+
+        function calculateGrade() {
+            const perfectScore = 6;
+            const score = Math.max(perfectScore - (totalGuesses - currentParticiple.length), 0);
+            const percentage = (score / perfectScore) * 100;
+            
+            if (percentage >= 90) return 'A';
+            if (percentage >= 80) return 'B';
+            if (percentage >= 70) return 'C';
+            if (percentage >= 60) return 'D';
+            return 'F';
+        }
+
+        newGame();
+    </script>
+</body>
+</html>

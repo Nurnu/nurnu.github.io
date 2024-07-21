@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biografía Quiz con Temporizador y Calificación</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        input { margin: 5px; padding: 5px; }
+        button { margin-top: 20px; padding: 10px; }
+        #feedback, #timer, #reward, #grade { margin-top: 20px; }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        .answer { font-weight: bold; }
+        #hourglass { font-size: 2em; animation: spin 2s linear infinite; display: inline-block; }
+        @keyframes spin { 100% { transform: rotate(180deg); } }
+        #reward { display: none; text-align: center; }
+        #champion { color: red; font-size: 2em; font-weight: bold; }
+        #medal { font-size: 3em; }
+        #grade { font-size: 1.5em; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Biografía Quiz con Temporizador y Calificación</h1>
+    <div id="timer">Tiempo restante: <span id="time">3:00</span> <span id="hourglass">⏳</span></div>
+    <p>Rellena los espacios en blanco con la forma correcta del verbo en pretérito indefinido:</p>
+    <div id="quiz">
+        Esta figura histórica <input type="text" id="verb1" data-answer="nació"> (nacer) en Kiev en 1898. A los 8 años, <input type="text" id="verb2" data-answer="emigró"> (emigrar) con su familia a Estados Unidos. En 1921, <input type="text" id="verb3" data-answer="se mudó"> (mudarse) a Palestina con su esposo. Allí, <input type="text" id="verb4" data-answer="participó"> (participar) activamente en la política sionista y <input type="text" id="verb5" data-answer="ascendió"> (ascender) rápidamente en las filas del movimiento laborista.
+
+        En 1948, <input type="text" id="verb6" data-answer="firmó"> (firmar) la Declaración de Independencia de Israel. <input type="text" id="verb7" data-answer="Ocupó"> (ocupar) varios cargos ministeriales importantes, incluyendo el de Ministra de Trabajo y Ministra de Asuntos Exteriores. En 1969, <input type="text" id="verb8" data-answer="se convirtió"> (convertirse) en la primera mujer Primera Ministra de Israel.
+
+        Durante su mandato, <input type="text" id="verb9" data-answer="enfrentó"> (enfrentar) muchos desafíos, incluyendo la Guerra de Yom Kippur en 1973. <input type="text" id="verb10" data-answer="Dejó"> (dejar) su cargo en 1974 debido a las críticas por la falta de preparación para esta guerra. <input type="text" id="verb11" data-answer="Murió"> (morir) en Jerusalén en 1978, dejando un legado duradero en la historia de Israel.
+    </div>
+    <button onclick="checkAnswers()">Comprobar respuestas</button>
+    <div id="feedback"></div>
+    <div id="reward">
+        <div id="medal">🏅</div>
+        <div id="champion">¡Eres un campeón!</div>
+    </div>
+    <div id="grade"></div>
+
+    <script>
+        let timeLeft = 180; // 3 minutes in seconds
+        let timerId;
+
+        function startTimer() {
+            timerId = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById('time').textContent = 
+                `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft === 0) {
+                clearInterval(timerId);
+                checkAnswers(true);
+            } else {
+                timeLeft--;
+            }
+        }
+
+        function checkAnswers(timeUp = false) {
+            clearInterval(timerId);
+            let inputs = document.querySelectorAll('input');
+            let correct = 0;
+            let feedbackHtml = '';
+            inputs.forEach(input => {
+                let userAnswer = input.value.toLowerCase().trim();
+                let correctAnswer = input.dataset.answer.toLowerCase();
+                if (userAnswer === correctAnswer) {
+                    input.style.backgroundColor = 'lightgreen';
+                    correct++;
+                    feedbackHtml += `<p class="correct">✓ "${userAnswer}" es correcto.</p>`;
+                } else {
+                    input.style.backgroundColor = 'lightpink';
+                    feedbackHtml += `<p class="incorrect">✗ "${userAnswer}" es incorrecto. La respuesta correcta es <span class="answer">"${correctAnswer}"</span>.</p>`;
+                }
+            });
+            let feedback = document.getElementById('feedback');
+            if (correct === inputs.length && !timeUp) {
+                feedback.innerHTML = '<h2>¡Felicidades! Has completado correctamente todos los espacios.</h2>' + feedbackHtml;
+                document.getElementById('reward').style.display = 'block';
+            } else if (timeUp) {
+                feedback.innerHTML = '<h2>¡Se acabó el tiempo! Aquí están tus resultados:</h2>' + feedbackHtml;
+            } else {
+                feedback.innerHTML = `<h2>Has acertado ${correct} de ${inputs.length}. Revisa tus respuestas:</h2>` + feedbackHtml;
+            }
+            gradeQuiz(correct, inputs.length, timeUp);
+        }
+
+        function gradeQuiz(correct, total, timeUp) {
+            let timeUsed = 180 - timeLeft;
+            let accuracyScore = (correct / total) * 100;
+            let timeScore = timeUp ? 0 : Math.max(0, (180 - timeUsed) / 180 * 100);
+            let finalScore = (accuracyScore * 0.7) + (timeScore * 0.3);
+            let grade;
+            if (finalScore >= 90) grade = 'A';
+            else if (finalScore >= 80) grade = 'B';
+            else if (finalScore >= 70) grade = 'C';
+            else if (finalScore >= 60) grade = 'D';
+            else grade = 'F';
+
+            let gradeElement = document.getElementById('grade');
+            gradeElement.innerHTML = `
+                <p>Puntuación final: ${finalScore.toFixed(2)}%</p>
+                <p>Calificación: ${grade}</p>
+                <p>Precisión: ${accuracyScore.toFixed(2)}%</p>
+                <p>Tiempo utilizado: ${Math.floor(timeUsed / 60)}:${(timeUsed % 60).toString().padStart(2, '0')}</p>
+            `;
+        }
+
+        startTimer();
+    </script>
+</body>
+</html>
